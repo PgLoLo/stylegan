@@ -12,12 +12,12 @@ import time
 import hashlib
 import numpy as np
 import tensorflow as tf
-import dnnlib
-import dnnlib.tflib as tflib
+from stylegan import dnnlib
+from stylegan.dnnlib import tflib as tflib
 
-import config
-from training import misc
-from training import dataset
+from stylegan import config
+from stylegan.training import misc
+from stylegan.training import dataset
 
 #----------------------------------------------------------------------------
 # Standard metrics.

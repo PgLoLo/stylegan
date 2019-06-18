@@ -204,7 +204,7 @@ def _populate_run_dir(run_dir: str, submit_config: SubmitConfig) -> None:
         run_func_module_dir_path = os.path.dirname(run_func_module_dir_path)
     files += util.list_dir_recursively_with_ignore(run_func_module_dir_path, ignores=submit_config.run_dir_ignore, add_base_to_relative=False)
 
-    dnnlib_module_dir_path = util.get_module_dir_by_obj_name("dnnlib")
+    dnnlib_module_dir_path = util.get_module_dir_by_obj_name("stylegan.dnnlib")
     files += util.list_dir_recursively_with_ignore(dnnlib_module_dir_path, ignores=submit_config.run_dir_ignore, add_base_to_relative=True)
 
     if submit_config.run_dir_extra_files is not None:
@@ -233,7 +233,7 @@ def run_wrapper(submit_config: SubmitConfig) -> None:
     else:  # when running in a cluster, redirect stderr to stdout, and just force flushing (log writing is handled by run.sh)
         logger = util.Logger(file_name=None, should_flush=True)
 
-    import dnnlib
+    from stylegan import dnnlib
     dnnlib.submit_config = submit_config
 
     try:

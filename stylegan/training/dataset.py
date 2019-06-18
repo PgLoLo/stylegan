@@ -11,8 +11,8 @@ import os
 import glob
 import numpy as np
 import tensorflow as tf
-import dnnlib
-import dnnlib.tflib as tflib
+from stylegan import dnnlib
+from stylegan.dnnlib import tflib as tflib
 
 #----------------------------------------------------------------------------
 # Parse individual image from a tfrecords file.
@@ -67,7 +67,7 @@ class TFRecordDataset:
         self._cur_lod           = -1
 
         # List tfrecords files and inspect their shapes.
-        assert os.path.isdir(self.tfrecord_dir)
+        assert os.path.isdir(self.tfrecord_dir), self.tfrecord_dir
         tfr_files = sorted(glob.glob(os.path.join(self.tfrecord_dir, '*.tfrecords')))
         assert len(tfr_files) >= 1
         tfr_shapes = []
@@ -225,7 +225,7 @@ class SyntheticDataset:
 #----------------------------------------------------------------------------
 # Helper func for constructing a dataset object using the given options.
 
-def load_dataset(class_name='training.dataset.TFRecordDataset', data_dir=None, verbose=False, **kwargs):
+def load_dataset(class_name='stylegan.training.dataset.TFRecordDataset', data_dir=None, verbose=False, **kwargs):
     adjusted_kwargs = dict(kwargs)
     if 'tfrecord_dir' in adjusted_kwargs and data_dir is not None:
         adjusted_kwargs['tfrecord_dir'] = os.path.join(data_dir, adjusted_kwargs['tfrecord_dir'])
