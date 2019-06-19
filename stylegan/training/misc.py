@@ -19,6 +19,9 @@ from stylegan import dnnlib
 from stylegan import config
 from stylegan.training import dataset
 
+import sys
+sys.modules['dnnlib'] = dnnlib
+
 #----------------------------------------------------------------------------
 # Convenience wrappers for pickle that are able to load data produced by
 # older versions of the code, and from external URLs.

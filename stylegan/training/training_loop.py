@@ -19,6 +19,7 @@ from stylegan import train
 from stylegan.training import dataset
 from stylegan.training import misc
 from stylegan.metrics import metric_base
+import time
 
 #----------------------------------------------------------------------------
 # Just-in-time processing of training images before feeding them to the networks.
@@ -225,12 +226,15 @@ def training_loop(
         prev_lod = sched.lod
 
         # Run training ops.
+        print('training ops start')
+        start_time = time.time()
         for _mb_repeat in range(minibatch_repeats):
             for _D_repeat in range(D_repeats):
                 tflib.run([D_train_op, Gs_update_op], {lod_in: sched.lod, lrate_in: sched.D_lrate, minibatch_in: sched.minibatch})
                 cur_nimg += sched.minibatch
             tflib.run([G_train_op], {lod_in: sched.lod, lrate_in: sched.G_lrate, minibatch_in: sched.minibatch})
-
+        tflib.autosummary.save_summaries(summary_log, cur_nimg)
+        print(f'training ops end in {time.time() - start_time:.2f}s')
         # Perform maintenance tasks once per tick.
         done = (cur_nimg >= total_kimg * 1000)
         if cur_nimg >= tick_start_nimg + sched.tick_kimg * 1000 or done:
@@ -241,30 +245,32 @@ def training_loop(
             total_time = ctx.get_time_since_start() + resume_time
 
             # Report progress.
-            print('tick %-5d kimg %-8.1f lod %-5.2f minibatch %-4d time %-12s sec/tick %-7.1f sec/kimg %-7.2f maintenance %-6.1f gpumem %-4.1f' % (
-                autosummary('Progress/tick', cur_tick),
-                autosummary('Progress/kimg', cur_nimg / 1000.0),
-                autosummary('Progress/lod', sched.lod),
-                autosummary('Progress/minibatch', sched.minibatch),
-                dnnlib.util.format_time(autosummary('Timing/total_sec', total_time)),
-                autosummary('Timing/sec_per_tick', tick_time),
-                autosummary('Timing/sec_per_kimg', tick_time / tick_kimg),
-                autosummary('Timing/maintenance_sec', maintenance_time),
-                autosummary('Resources/peak_gpu_mem_gb', peak_gpu_mem_op.eval() / 2**30)))
-            autosummary('Timing/total_hours', total_time / (60.0 * 60.0))
-            autosummary('Timing/total_days', total_time / (24.0 * 60.0 * 60.0))
+            # print('tick %-5d kimg %-8.1f lod %-5.2f minibatch %-4d time %-12s sec/tick %-7.1f sec/kimg %-7.2f maintenance %-6.1f gpumem %-4.1f' % (
+            #     autosummary('Progress/tick', cur_tick),
+            #     autosummary('Progress/kimg', cur_nimg / 1000.0),
+            #     autosummary('Progress/lod', sched.lod),
+            #     autosummary('Progress/minibatch', sched.minibatch),
+            #     dnnlib.util.format_time(autosummary('Timing/total_sec', total_time)),
+            #     autosummary('Timing/sec_per_tick', tick_time),
+            #     autosummary('Timing/sec_per_kimg', tick_time / tick_kimg),
+            #     autosummary('Timing/maintenance_sec', maintenance_time),
+            #     autosummary('Resources/peak_gpu_mem_gb', peak_gpu_mem_op.eval() / 2**30)))
+            # autosummary('Timing/total_hours', total_time / (60.0 * 60.0))
+            # autosummary('Timing/total_days', total_time / (24.0 * 60.0 * 60.0))
 
             # Save snapshots.
             if cur_tick % image_snapshot_ticks == 0 or done:
                 grid_fakes = Gs.run(grid_latents, grid_labels, is_validation=True, minibatch_size=sched.minibatch//submit_config.num_gpus)
                 misc.save_image_grid(grid_fakes, os.path.join(submit_config.run_dir, 'fakes%06d.png' % (cur_nimg // 1000)), drange=drange_net, grid_size=grid_size)
-            if cur_tick % network_snapshot_ticks == 0 or done or cur_tick == 1:
-                pkl = os.path.join(submit_config.run_dir, 'network-snapshot-%06d.pkl' % (cur_nimg // 1000))
-                misc.save_pkl((G, D, Gs), pkl)
-                metrics.run(pkl, run_dir=submit_config.run_dir, num_gpus=submit_config.num_gpus, tf_config=tf_config)
+            # if cur_tick % network_snapshot_ticks == 0 or done or cur_tick == 1:
+            #     pkl = os.path.join(submit_config.run_dir, 'network-snapshot-%06d.pkl' % (cur_nimg // 1000))
+            #     misc.save_pkl((G, D, Gs), pkl)
+            #     print('metrics start')
+            #     metrics.run(pkl, run_dir=submit_config.run_dir, num_gpus=submit_config.num_gpus, tf_config=tf_config)
+            #     print('metrics end')
 
             # Update summaries and RunContext.
-            metrics.update_autosummaries()
+            # metrics.update_autosummaries()
             tflib.autosummary.save_summaries(summary_log, cur_nimg)
             ctx.update('%.2f' % sched.lod, cur_epoch=cur_nimg // 1000, max_epoch=total_kimg)
             maintenance_time = ctx.get_last_update_interval() - tick_time

@@ -43,10 +43,11 @@ if 1:
     #desc += '-cat';      dataset = EasyDict(tfrecord_dir='lsun-cat-full');        train.mirror_augment = False
 
     # Number of GPUs.
-    #desc += '-1gpu'; submit_config.num_gpus = 1; sched.minibatch_base = 4; sched.minibatch_dict = {4: 128, 8: 128, 16: 128, 32: 64, 64: 32, 128: 16, 256: 8, 512: 4}
+    FACTOR = 2
+    desc += '-1gpu'; submit_config.num_gpus = 1; sched.minibatch_base = 4; sched.minibatch_dict = {4: 128 // FACTOR, 8: 128 // FACTOR, 16: 128 // FACTOR, 32: 64 // FACTOR, 64: 32 // FACTOR, 128: 16 // FACTOR, 256: 8 // FACTOR, 512: 4 // FACTOR}
     #desc += '-2gpu'; submit_config.num_gpus = 2; sched.minibatch_base = 8; sched.minibatch_dict = {4: 256, 8: 256, 16: 128, 32: 64, 64: 32, 128: 16, 256: 8}
     #desc += '-4gpu'; submit_config.num_gpus = 4; sched.minibatch_base = 16; sched.minibatch_dict = {4: 512, 8: 256, 16: 128, 32: 64, 64: 32, 128: 16}
-    desc += '-8gpu'; submit_config.num_gpus = 8; sched.minibatch_base = 32; sched.minibatch_dict = {4: 512, 8: 256, 16: 128, 32: 64, 64: 32}
+    # desc += '-8gpu'; submit_config.num_gpus = 8; sched.minibatch_base = 32; sched.minibatch_dict = {4: 512, 8: 256, 16: 128, 32: 64, 64: 32}
 
     # Default options.
     train.total_kimg = 25000
@@ -83,13 +84,13 @@ if 1:
 
 if 0:
     desc          = 'pgan'                                                         # Description string included in result subdir name.
-    train         = EasyDict(run_func_name='training.training_loop.training_loop') # Options for training loop.
-    G             = EasyDict(func_name='training.networks_progan.G_paper')         # Options for generator network.
-    D             = EasyDict(func_name='training.networks_progan.D_paper')         # Options for discriminator network.
+    train         = EasyDict(run_func_name='stylegan.training.training_loop.training_loop') # Options for training loop.
+    G             = EasyDict(func_name='stylegan.training.networks_progan.G_paper')         # Options for generator network.
+    D             = EasyDict(func_name='stylegan.training.networks_progan.D_paper')         # Options for discriminator network.
     G_opt         = EasyDict(beta1=0.0, beta2=0.99, epsilon=1e-8)                  # Options for generator optimizer.
     D_opt         = EasyDict(beta1=0.0, beta2=0.99, epsilon=1e-8)                  # Options for discriminator optimizer.
-    G_loss        = EasyDict(func_name='training.loss.G_wgan')                     # Options for generator loss.
-    D_loss        = EasyDict(func_name='training.loss.D_wgan_gp')                  # Options for discriminator loss.
+    G_loss        = EasyDict(func_name='stylegan.training.loss.G_wgan')                     # Options for generator loss.
+    D_loss        = EasyDict(func_name='stylegan.training.loss.D_wgan_gp')                  # Options for discriminator loss.
     dataset       = EasyDict()                                                     # Options for load_dataset().
     sched         = EasyDict()                                                     # Options for TrainingSchedule.
     grid          = EasyDict(size='1080p', layout='random')                        # Options for setup_snapshot_image_grid().

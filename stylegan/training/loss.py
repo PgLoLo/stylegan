@@ -8,8 +8,8 @@
 """Loss functions."""
 
 import tensorflow as tf
-import dnnlib.tflib as tflib
-from dnnlib.tflib.autosummary import autosummary
+import stylegan.dnnlib.tflib as tflib
+from stylegan.dnnlib.tflib.autosummary import autosummary
 
 #----------------------------------------------------------------------------
 # Convenience func that casts all of its arguments to tf.float32.
@@ -134,6 +134,9 @@ def G_logistic_nonsaturating(G, D, opt, training_set, minibatch_size): # pylint:
     fake_images_out = G.get_output_for(latents, labels, is_training=True)
     fake_scores_out = fp32(D.get_output_for(fake_images_out, labels, is_training=True))
     loss = tf.nn.softplus(-fake_scores_out)  # -log(logistic(fake_scores_out))
+
+    loss = autosummary('Loss/generator_loss', loss)
+
     return loss
 
 def D_logistic(G, D, opt, training_set, minibatch_size, reals, labels): # pylint: disable=unused-argument
@@ -157,6 +160,8 @@ def D_logistic_simplegp(G, D, opt, training_set, minibatch_size, reals, labels, 
     loss = tf.nn.softplus(fake_scores_out)  # -log(1 - logistic(fake_scores_out))
     loss += tf.nn.softplus(-real_scores_out)  # -log(logistic(real_scores_out)) # temporary pylint workaround # pylint: disable=invalid-unary-operand-type
 
+    loss = autosummary('Loss/discriminator_loss', loss)
+
     if r1_gamma != 0.0:
         with tf.name_scope('R1Penalty'):
             real_loss = opt.apply_loss_scaling(tf.reduce_sum(real_scores_out))
@@ -172,6 +177,10 @@ def D_logistic_simplegp(G, D, opt, training_set, minibatch_size, reals, labels, 
             r2_penalty = tf.reduce_sum(tf.square(fake_grads), axis=[1,2,3])
             r2_penalty = autosummary('Loss/r2_penalty', r2_penalty)
         loss += r2_penalty * (r2_gamma * 0.5)
+
+    loss = autosummary('Loss/discriminator_loss_full', loss)
+
+
     return loss
 
 #----------------------------------------------------------------------------
